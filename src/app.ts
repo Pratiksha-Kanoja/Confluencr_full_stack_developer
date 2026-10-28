@@ -22,8 +22,9 @@ export function createApp(): Express {
   app.use(express.json());
   app.use(express.urlencoded({ extended: true }));
 
-  // Serve static files for Frontend Dashboard
-  const publicDir = path.join(__dirname, 'public');
+  // Local dashboard files live in /public. On Vercel that folder is served
+  // by the CDN, and express.static is ignored.
+  const publicDir = path.join(process.cwd(), 'public');
   app.use(express.static(publicDir));
 
   // Load and mount Swagger documentation

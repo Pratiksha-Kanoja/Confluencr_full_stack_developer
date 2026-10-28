@@ -3,11 +3,14 @@
   "version": "1.0.0",
   "description": "",
   "type": "module",
+  "engines": {
+    "node": "24.x"
+  },
   "scripts": {
     "start": "tsx src/server.ts",
     "dev": "tsx watch src/server.ts",
     "test": "NODE_ENV=test tsx --test tests/**/*.test.ts",
-    "build": "tsc && cp -r src/public dist/ 2>/dev/null || true && cp -r src/docs dist/ 2>/dev/null || true"
+    "build": "tsc && cp -r public dist/public 2>/dev/null || true && cp -r src/docs dist/docs 2>/dev/null || true"
   },
   "bugs": {
     "url": "https://github.com/Pratiksha-Kanoja/Confluencr_full_stack_developer/issues"

@@ -26,7 +26,9 @@ export function initDb(dbPath?: string): DatabaseSync {
   
   // Set PRAGMA configurations
   db.exec('PRAGMA foreign_keys = ON;');
-  if (targetPath !== ':memory:') {
+  // WAL needs extra files beside the database. /tmp on Vercel is writable,
+  // but the rollback journal is more reliable there than WAL.
+  if (targetPath !== ':memory:' && !targetPath.startsWith('/tmp')) {
     db.exec('PRAGMA journal_mode = WAL;');
     db.exec('PRAGMA synchronous = NORMAL;');
   }
