@@ -1,0 +1,401 @@
+openapi: 3.0.3
+info:
+  title: Transaction Ledger API
+  description: >
+    Production-ready backend API for a transaction ledger system built for the
+    Full Stack Developer Assessment.
+    Provides strict ACID atomicity, balance consistency, transaction immutability,
+    duplicate prevention, pagination, filtering, and multi-account money transfers.
+  version: 1.0.0
+  contact:
+    name: Transaction Ledger Support
+servers:
+  - url: http://localhost:3000
+    description: Local Development Server
+
+paths:
+  /api/health:
+    get:
+      summary: Health check
+      description: Returns service health status and timestamp.
+      responses:
+        '200':
+          description: Service is healthy
+
+  /api/accounts:
+    post:
+      summary: Create a new account
+      description: Creates an account with an initial balance strictly initialized to 0.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - name
+              properties:
+                name:
+                  type: string
+                  example: Jane Doe
+                  description: Name of the account holder
+      responses:
+        '201':
+          description: Account created successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AccountResponse'
+        '400':
+          description: Validation error (e.g. missing name or trying to set initial balance)
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+    get:
+      summary: List all accounts
+      description: Retrieves all registered accounts.
+      responses:
+        '200':
+          description: List of accounts
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+                  data:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/Account'
+
+  /api/accounts/{accountId}:
+    get:
+      summary: Get account details
+      parameters:
+        - name: accountId
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Account details
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AccountResponse'
+        '404':
+          description: Account not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /api/accounts/{accountId}/balance:
+    get:
+      summary: Get current account balance
+      description: Retrieves the current balance and account info.
+      parameters:
+        - name: accountId
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Current account balance
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+                  data:
+                    type: object
+                    properties:
+                      account_id:
+                        type: string
+                        example: "a813b19e-e8fd-426b-8ee3-45f8f533bf4e"
+                      balance:
+                        type: number
+                        example: 150.00
+                      name:
+                        type: string
+                        example: "Jane Doe"
+                      created_at:
+                        type: string
+                        format: date-time
+        '404':
+          description: Account not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /api/accounts/{accountId}/transactions:
+    post:
+      summary: Add a transaction to an account
+      description: >
+        Adds a credit or debit transaction. Updates account balance atomically.
+        Rejects debits exceeding balance and prevents duplicate reference_ids per account.
+      parameters:
+        - name: accountId
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - type
+                - amount
+                - reference_id
+              properties:
+                type:
+                  type: string
+                  enum: [credit, debit]
+                  example: credit
+                amount:
+                  type: number
+                  minimum: 0.01
+                  example: 50.00
+                reference_id:
+                  type: string
+                  example: "INV-1001"
+                description:
+                  type: string
+                  example: "Payment for consulting services"
+      responses:
+        '201':
+          description: Transaction created and balance updated
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TransactionResponse'
+        '400':
+          description: Invalid request data
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '404':
+          description: Account not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '409':
+          description: Duplicate transaction reference for this account
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '422':
+          description: Insufficient balance for debit transaction
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+    get:
+      summary: Get account transaction history
+      description: Returns transactions sorted latest-first, with pagination and optional type filtering.
+      parameters:
+        - name: accountId
+          in: path
+          required: true
+          schema:
+            type: string
+        - name: type
+          in: query
+          required: false
+          schema:
+            type: string
+            enum: [credit, debit]
+          description: Filter transactions by type
+        - name: page
+          in: query
+          required: false
+          schema:
+            type: integer
+            default: 1
+            minimum: 1
+          description: Page number
+        - name: limit
+          in: query
+          required: false
+          schema:
+            type: integer
+            default: 10
+            minimum: 1
+            maximum: 100
+          description: Number of records per page
+      responses:
+        '200':
+          description: Transaction history list with pagination info
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+                  current_page:
+                    type: integer
+                    example: 1
+                  page_size:
+                    type: integer
+                    example: 10
+                  total_records:
+                    type: integer
+                    example: 25
+                  total_pages:
+                    type: integer
+                    example: 3
+                  transactions:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/Transaction'
+        '404':
+          description: Account not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /api/transfers:
+    post:
+      summary: Transfer money between accounts (Bonus)
+      description: Atomically debits the source account and credits destination account.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - source_account_id
+                - destination_account_id
+                - amount
+                - reference_id
+              properties:
+                source_account_id:
+                  type: string
+                  example: "acc-1"
+                destination_account_id:
+                  type: string
+                  example: "acc-2"
+                amount:
+                  type: number
+                  example: 30.00
+                reference_id:
+                  type: string
+                  example: "TRF-9901"
+                description:
+                  type: string
+                  example: "Split dinner bill"
+      responses:
+        '201':
+          description: Transfer executed successfully
+        '400':
+          description: Invalid input or identical accounts
+        '404':
+          description: Source or destination account not found
+        '409':
+          description: Duplicate transfer reference
+        '422':
+          description: Source account has insufficient balance
+
+components:
+  schemas:
+    Account:
+      type: object
+      properties:
+        id:
+          type: string
+          example: "a813b19e-e8fd-426b-8ee3-45f8f533bf4e"
+        name:
+          type: string
+          example: "Alice Smith"
+        balance:
+          type: number
+          example: 0
+        created_at:
+          type: string
+          format: date-time
+          example: "2026-10-28T12:00:00.000Z"
+
+    Transaction:
+      type: object
+      properties:
+        id:
+          type: string
+          example: "tx-f1a2b3c4-1234-5678"
+        account_id:
+          type: string
+          example: "a813b19e-e8fd-426b-8ee3-45f8f533bf4e"
+        type:
+          type: string
+          enum: [credit, debit]
+          example: "credit"
+        amount:
+          type: number
+          example: 100.00
+        description:
+          type: string
+          example: "Initial deposit"
+        reference_id:
+          type: string
+          example: "REF-001"
+        created_at:
+          type: string
+          format: date-time
+          example: "2026-10-28T12:05:00.000Z"
+
+    AccountResponse:
+      type: object
+      properties:
+        success:
+          type: boolean
+          example: true
+        data:
+          $ref: '#/components/schemas/Account'
+
+    TransactionResponse:
+      type: object
+      properties:
+        success:
+          type: boolean
+          example: true
+        data:
+          $ref: '#/components/schemas/Transaction'
+
+    ErrorResponse:
+      type: object
+      properties:
+        success:
+          type: boolean
+          example: false
+        error:
+          type: object
+          properties:
+            code:
+              type: string
+              example: "INSUFFICIENT_BALANCE"
+            message:
+              type: string
+              example: "Debit transaction rejected: insufficient balance"
+            details:
+              type: array
+              items:
+                type: object

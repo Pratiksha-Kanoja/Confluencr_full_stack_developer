@@ -147,3 +147,16 @@ vite.config.ts.timestamp-*
 
 # Turbo Repo
 .turbo
+
+# Build output
+dist/
+
+# SQLite databases
+*.db
+*.db-wal
+*.db-shm
+ledger.db*
+
+# Environment
+.env
+.env.local

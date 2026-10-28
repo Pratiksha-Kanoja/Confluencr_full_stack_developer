@@ -1,0 +1,241 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Confluencr</title>
+  <meta name="description" content="Account ledger for credits, debits, and transfers.">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Instrument+Sans:wght@400;500;600;700&family=Instrument+Serif:ital@0;1&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body data-view="overview">
+  <aside class="sidebar" id="sidebar">
+    <div class="brand">
+      <span class="brand-mark" aria-hidden="true"></span>
+      <span class="brand-name">confluencr</span>
+    </div>
+
+    <nav class="nav" aria-label="Primary">
+      <button class="nav-item active" type="button" data-nav="overview">
+        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 10.5 12 4l8 6.5V20a1 1 0 0 1-1 1h-5v-6H10v6H5a1 1 0 0 1-1-1z"/></svg>
+        Overview
+      </button>
+      <button class="nav-item" type="button" data-nav="ledger">
+        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M7 4h10a2 2 0 0 1 2 2v14l-3-2-3 2-3-2-3 2V6a2 2 0 0 1 2-2z"/><path d="M9 9h6M9 13h6"/></svg>
+        Transactions
+      </button>
+      <button class="nav-item" type="button" data-nav="accounts">
+        <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="9" cy="8" r="3"/><path d="M3.5 19a5.5 5.5 0 0 1 11 0"/><path d="M17 11h4M19 9v4"/></svg>
+        Accounts
+      </button>
+    </nav>
+
+    <div class="sidebar-foot">
+      <a href="/api-docs" target="_blank" class="nav-item" id="btn-swagger-link">
+        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 4h9l3 3v13a1 1 0 0 1-1 1H6a1 1 0 0 1-1-1V5a1 1 0 0 1 1-1z"/><path d="M14 4v4h4M8 13h8M8 17h5"/></svg>
+        API reference
+      </a>
+      <div id="system-status" class="status-indicator online">
+        <span class="status-dot"></span>
+        <span class="status-text">Ledger online</span>
+      </div>
+    </div>
+  </aside>
+
+  <div class="shell">
+    <header class="topbar">
+      <button class="icon-btn nav-toggle" id="btn-nav" type="button" aria-label="Open menu">
+        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 7h16M4 12h16M4 17h16"/></svg>
+      </button>
+
+      <label class="switcher">
+        <span class="sr-only">Active account</span>
+        <select id="account-switcher" aria-label="Active account">
+          <option value="">No accounts yet</option>
+        </select>
+      </label>
+
+      <div class="topbar-spacer"></div>
+
+      <button class="icon-btn" id="btn-refresh-accounts" type="button" title="Refresh accounts" aria-label="Refresh accounts">
+        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M20 12a8 8 0 1 1-2.2-5.5"/><path d="M20 4v5h-5"/></svg>
+      </button>
+
+      <div class="profile">
+        <span class="avatar" id="avatar-initials">—</span>
+        <span class="profile-name" id="hero-account-name">No account</span>
+      </div>
+    </header>
+
+    <main class="workspace">
+      <section class="ledger-workspace">
+        <p class="page-kicker" id="page-kicker">Overview</p>
+
+        <section class="balance-card" id="hero-banner">
+          <div class="balance-copy">
+            <p class="balance-label">Current balance</p>
+            <p class="balance-amount" id="hero-account-balance">$0.00</p>
+            <p class="id-line">
+              <span class="mono-id" id="hero-account-id">Select an account</span>
+              <button class="text-btn" id="btn-copy-id" type="button">Copy</button>
+            </p>
+            <p class="balance-subtext" id="hero-balance-status"></p>
+          </div>
+          <div class="action-row">
+            <button class="action deposit" id="btn-open-credit" type="button">
+              <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 4v11"/><path d="m7 11 5 5 5-5"/><path d="M5 20h14"/></svg>
+              Deposit
+            </button>
+            <button class="action withdraw" id="btn-open-debit" type="button">
+              <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 20V9"/><path d="m7 13 5-5 5 5"/><path d="M5 4h14"/></svg>
+              Withdraw
+            </button>
+            <button class="action transfer" id="btn-open-transfer" type="button">
+              <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M7 7h11l-3-3"/><path d="M17 17H6l3 3"/></svg>
+              Transfer
+            </button>
+          </div>
+        </section>
+
+        <section class="composer" id="composer" hidden>
+          <div class="composer-head">
+            <h2 id="composer-title">Deposit</h2>
+            <button class="text-btn" id="btn-close-composer" type="button">Close</button>
+          </div>
+
+          <form id="form-add-transaction" class="composer-form">
+            <div class="tx-type-toggle" hidden>
+              <label class="tx-type-option">
+                <input type="radio" name="tx-type" value="credit" checked>
+                <span class="toggle-btn credit-btn">Credit</span>
+              </label>
+              <label class="tx-type-option">
+                <input type="radio" name="tx-type" value="debit">
+                <span class="toggle-btn debit-btn">Debit</span>
+              </label>
+            </div>
+            <div class="field">
+              <label for="input-tx-amount">Amount</label>
+              <input type="number" step="0.01" min="0.01" id="input-tx-amount" class="input" placeholder="0.00" required>
+            </div>
+            <div class="field">
+              <label for="input-tx-ref">Reference</label>
+              <input type="text" id="input-tx-ref" class="input" placeholder="INV-1042" required>
+            </div>
+            <div class="field field-wide">
+              <label for="input-tx-desc">Description</label>
+              <input type="text" id="input-tx-desc" class="input" placeholder="What is this for?">
+            </div>
+            <div class="composer-actions">
+              <button type="submit" class="btn btn-primary" id="btn-submit-tx">Post</button>
+              <button type="button" class="btn btn-secondary" id="btn-random-ref">New reference</button>
+            </div>
+          </form>
+
+          <form id="form-transfer" class="composer-form" hidden>
+            <div class="field field-wide">
+              <label for="select-dest-account">To</label>
+              <select id="select-dest-account" class="input" required>
+                <option value="" disabled selected>Choose an account</option>
+              </select>
+            </div>
+            <div class="field">
+              <label for="input-transfer-amount">Amount</label>
+              <input type="number" step="0.01" min="0.01" id="input-transfer-amount" class="input" placeholder="0.00" required>
+            </div>
+            <div class="field">
+              <label for="input-transfer-ref">Reference</label>
+              <input type="text" id="input-transfer-ref" class="input" placeholder="TRF-001" required>
+            </div>
+            <div class="field field-wide">
+              <label for="input-transfer-desc">Description</label>
+              <input type="text" id="input-transfer-desc" class="input" placeholder="Optional note">
+            </div>
+            <div class="composer-actions">
+              <button type="submit" class="btn btn-primary" id="btn-submit-transfer">Send</button>
+            </div>
+          </form>
+        </section>
+
+        <section class="table-card ledger-card">
+          <div class="ledger-header">
+            <h2>Transaction history</h2>
+            <div class="ledger-tools">
+              <label class="search">
+                <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="11" cy="11" r="6"/><path d="m20 20-3.5-3.5"/></svg>
+                <input id="ledger-search" type="search" placeholder="Find on this page" aria-label="Filter transactions on this page">
+              </label>
+              <div class="filter-pills" role="tablist" aria-label="Transaction type">
+                <button class="pill active" data-filter="" type="button">All</button>
+                <button class="pill" data-filter="credit" type="button">Credit</button>
+                <button class="pill" data-filter="debit" type="button">Debit</button>
+              </div>
+            </div>
+          </div>
+
+          <div class="table-wrapper">
+            <table class="ledger-table" id="ledger-table">
+              <thead>
+                <tr>
+                  <th>Reference</th>
+                  <th>Date &amp; time</th>
+                  <th>Description</th>
+                  <th>Type</th>
+                  <th class="num">Amount</th>
+                  <th>Status</th>
+                </tr>
+              </thead>
+              <tbody id="ledger-tbody">
+                <tr>
+                  <td colspan="6" class="empty-state">Select an account to see its history.</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+
+          <div class="pagination-footer" id="pagination-footer">
+            <p class="pagination-info" id="pagination-info">Showing 0 of 0 transactions</p>
+            <div class="pagination-controls">
+              <span class="page-label">Page</span>
+              <button class="page-btn" id="btn-prev-page" type="button" disabled aria-label="Previous page">
+                <svg viewBox="0 0 24 24" aria-hidden="true"><path d="m14 6-6 6 6 6"/></svg>
+              </button>
+              <span class="pagination-page-indicator" id="page-indicator">1 of 1</span>
+              <button class="page-btn" id="btn-next-page" type="button" disabled aria-label="Next page">
+                <svg viewBox="0 0 24 24" aria-hidden="true"><path d="m10 6 6 6-6 6"/></svg>
+              </button>
+            </div>
+          </div>
+        </section>
+      </section>
+
+      <section class="accounts-panel">
+        <p class="page-kicker">Accounts</p>
+        <div class="accounts-layout">
+          <section class="table-card">
+            <div class="ledger-header">
+              <h2>All accounts</h2>
+            </div>
+            <div id="accounts-container" class="accounts-list">
+              <div class="loading-state">Loading accounts…</div>
+            </div>
+          </section>
+
+          <form id="form-create-account" class="table-card create-card">
+            <h2>Open an account</h2>
+            <p class="hint">It opens at $0.00. Balance only changes when you post an entry.</p>
+            <label for="input-account-name">Account holder</label>
+            <input type="text" id="input-account-name" class="input" placeholder="Account holder name" required autocomplete="name">
+            <button type="submit" class="btn btn-primary" id="btn-create-account">Open account</button>
+          </form>
+        </div>
+      </section>
+    </main>
+  </div>
+
+  <div id="toast-container" class="toast-container"></div>
+  <script src="app.js"></script>
+</body>
+</html>

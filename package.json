@@ -1,0 +1,36 @@
+{
+  "name": "confluencr_full_stack_developer",
+  "version": "1.0.0",
+  "description": "",
+  "type": "module",
+  "scripts": {
+    "start": "tsx src/server.ts",
+    "dev": "tsx watch src/server.ts",
+    "test": "NODE_ENV=test tsx --test tests/**/*.test.ts",
+    "build": "tsc && cp -r src/public dist/ 2>/dev/null || true && cp -r src/docs dist/ 2>/dev/null || true"
+  },
+  "bugs": {
+    "url": "https://github.com/Pratiksha-Kanoja/Confluencr_full_stack_developer/issues"
+  },
+  "homepage": "https://github.com/Pratiksha-Kanoja/Confluencr_full_stack_developer#readme",
+  "dependencies": {
+    "cors": "^2.8.6",
+    "express": "^5.3.0",
+    "swagger-ui-express": "^5.0.1",
+    "uuid": "^14.0.3",
+    "yamljs": "^0.3.0",
+    "zod": "^3.25.76"
+  },
+  "devDependencies": {
+    "@types/cors": "^2.8.19",
+    "@types/express": "^5.0.6",
+    "@types/node": "^26.6.5",
+    "@types/supertest": "^7.2.1",
+    "@types/swagger-ui-express": "^4.1.8",
+    "@types/uuid": "^10.0.0",
+    "@types/yamljs": "^0.2.34",
+    "supertest": "^7.3.1",
+    "tsx": "^4.23.15",
+    "typescript": "^7.0.2"
+  }
+}
